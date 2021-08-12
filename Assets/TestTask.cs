@@ -120,77 +120,65 @@ public class TestTask : MonoBehaviour
 
     private void ConnectUnlinkedFrustrums()
     {
-        bool found1, found2, found3, found4, found5, found6, found7, found8, found9, found10, found11, found12;
+        
         for (int i = 0; i < pathZones.Count - 2; )
         {
+            int pathLen = path.Count;
             var f1 = pathZones[i].Item1;
             var f2 = pathZones[i+2].Item1; //TODO: handle more irregular case
             var gap = pathZones[i + 1].Item2;
+            Vector2 pt;
             Rect borderedRect = Rect.MinMaxRect(gap.Rect.xMin + radius, gap.Rect.yMin + radius, gap.Rect.xMax - radius, gap.Rect.yMax - radius);
 
+            //risk of jagged array below, but OK for test task
+            Vector2[][] linesToCheck = {    new Vector2[4]{ f1.highStart, f1.highEnd, f2.highStart, f2.highEnd },
+                                            new Vector2[4]{ f1.lowStart, f1.lowEnd, f2.lowStart, f2.lowEnd },
+                                            new Vector2[4]{ f1.highStart, f1.highEnd, f2.lowStart, f2.lowEnd },
+                                            new Vector2[4]{ f1.lowStart, f1.lowEnd, f2.highStart, f2.highEnd }
+                                        };
 
-            var pt1 = GetIntersectionPointCoordinates(f1.highStart, f1.highEnd, f2.highStart, f2.highEnd, out found1);
-            var pt2 = GetIntersectionPointCoordinates(f1.lowStart, f1.lowEnd, f2.lowStart, f2.lowEnd, out found2);
-            var pt3 = GetIntersectionPointCoordinates(f1.highStart, f1.highEnd, f2.lowStart, f2.lowEnd, out found3);
-            var pt4 = GetIntersectionPointCoordinates(f1.lowStart, f1.lowEnd, f2.highStart, f2.highEnd, out found4);
-            if (found1 && borderedRect.Contains(pt1))
-            { 
-                path.Add(pt1); 
-            }
-            else if (found2 && borderedRect.Contains(pt2))
+            foreach (var line in linesToCheck)
             {
-                path.Add(pt2);
+                if (GetIntersectionPointCoordinates(line[0], line[1], line[2], line[3], out pt) && borderedRect.Contains(pt))
+                {
+                    path.Add(pt);
+                    break;
+                } 
             }
-            else if (found3 && borderedRect.Contains(pt3))
+            
+            if (path.Count == pathLen) //no points were added as intersections, thus make a broken line
             {
-                path.Add(pt3);
-            }
-            else if (found4 && borderedRect.Contains(pt4))
-            {
-                path.Add(pt4);
-            }
-            else
-            {
+                Vector2[][] brokenLinesToCheck1 = {  
+                                                    new Vector2[4]{ f1.highStart, f1.highEnd, gap.Rect.center, gap.Rect.center + Vector2.right },
+                                                    new Vector2[4]{ f1.highStart, f1.highEnd, gap.Rect.center, gap.Rect.center + Vector2.up },
+                                                    new Vector2[4]{ f1.lowStart, f1.lowEnd, gap.Rect.center, gap.Rect.center + Vector2.right },
+                                                    new Vector2[4]{ f1.lowStart, f1.lowEnd, gap.Rect.center, gap.Rect.center + Vector2.up },
+                                                    
+                                                    };
+                Vector2[][] brokenLinesToCheck2 = { 
+                                                    new Vector2[4]{ f2.highStart, f2.highEnd, gap.Rect.center, gap.Rect.center + Vector2.right },
+                                                    new Vector2[4]{ f2.highStart, f2.highEnd, gap.Rect.center, gap.Rect.center + Vector2.up },
+                                                    new Vector2[4]{ f2.lowStart, f2.lowEnd, gap.Rect.center, gap.Rect.center + Vector2.right },
+                                                    new Vector2[4]{ f2.lowStart, f2.lowEnd, gap.Rect.center, gap.Rect.center + Vector2.up },
+                                                    };
+
+
                 //Brute adding connecting points
-                var pt5 = GetIntersectionPointCoordinates(f1.highStart, f1.highEnd, gap.Rect.center, gap.Rect.center + Vector2.right, out found5);
-                var pt6 = GetIntersectionPointCoordinates(f1.highStart, f1.highEnd, gap.Rect.center, gap.Rect.center + Vector2.up, out found6);
-                var pt9 = GetIntersectionPointCoordinates(f1.lowStart, f1.lowEnd, gap.Rect.center, gap.Rect.center + Vector2.right, out found9);
-                var pt10 = GetIntersectionPointCoordinates(f1.lowStart, f1.lowEnd, gap.Rect.center, gap.Rect.center + Vector2.up, out found10);
-                if (found5 && borderedRect.Contains(pt5))
+                foreach (var line in brokenLinesToCheck1)
                 {
-                    path.Add(pt5);
+                    if (GetIntersectionPointCoordinates(line[0], line[1], line[2], line[3], out pt) && borderedRect.Contains(pt))
+                    {
+                        path.Add(pt);
+                        break;
+                    }
                 }
-                else if (found6 && borderedRect.Contains(pt6))
+                foreach (var line in brokenLinesToCheck2)
                 {
-                    path.Add(pt6);
-                }
-                else if (found9 && borderedRect.Contains(pt9))
-                {
-                    path.Add(pt9);
-                }
-                else if (found10 && borderedRect.Contains(pt10))
-                {
-                    path.Add(pt10);
-                }
-                var pt7 = GetIntersectionPointCoordinates(f2.highStart, f2.highEnd, gap.Rect.center, gap.Rect.center + Vector2.right, out found7);
-                var pt8 = GetIntersectionPointCoordinates(f2.highStart, f2.highEnd, gap.Rect.center, gap.Rect.center + Vector2.up, out found8);
-                var pt11 = GetIntersectionPointCoordinates(f2.lowStart, f2.lowEnd, gap.Rect.center, gap.Rect.center + Vector2.right, out found11);
-                var pt12 = GetIntersectionPointCoordinates(f2.lowStart, f2.lowEnd, gap.Rect.center, gap.Rect.center + Vector2.up, out found12);
-                if (found7 && borderedRect.Contains(pt7))
-                {
-                    path.Add(pt7);
-                }
-                else if (found8 && borderedRect.Contains(pt8))
-                {
-                    path.Add(pt8);
-                }
-                else if (found11 && borderedRect.Contains(pt11))
-                {
-                    path.Add(pt11);
-                }
-                else if (found12 && borderedRect.Contains(pt12))
-                {
-                    path.Add(pt12);
+                    if (GetIntersectionPointCoordinates(line[0], line[1], line[2], line[3], out pt) && borderedRect.Contains(pt))
+                    {
+                        path.Add(pt);
+                        break;
+                    }
                 }
             }
             i += 2; //TODO: handle more irregular case
@@ -291,25 +279,25 @@ public class TestTask : MonoBehaviour
         return frustrum;
     }
 
-    public Vector2 GetIntersectionPointCoordinates(Vector2 A1, Vector2 A2, Vector2 B1, Vector2 B2, out bool found)
+    public bool GetIntersectionPointCoordinates(Vector2 A1, Vector2 A2, Vector2 B1, Vector2 B2, out Vector2 pt)
     {
         float tmp = (B2.x - B1.x) * (A2.y - A1.y) - (B2.y - B1.y) * (A2.x - A1.x);
 
         if (tmp == 0)
         {
             // No solution!
-            found = false;
-            return Vector2.zero;
+            
+            pt = Vector2.zero;
+            return false;
         }
 
         float mu = ((A1.x - B1.x) * (A2.y - A1.y) - (A1.y - B1.y) * (A2.x - A1.x)) / tmp;
 
-        found = true;
-
-        return new Vector2(
+        pt = new Vector2(
             B1.x + (B2.x - B1.x) * mu,
             B1.y + (B2.y - B1.y) * mu
         );
+        return true; 
     }
 
     private void Start()
